@@ -161,12 +161,12 @@ PYTHON_WORKER_URL=http://pdf-processor:8000
 
 ```bash
 # Microsserviço Python
-cd src/PdfProcessor
+cd NaluResumeAutomation/python-worker/
 pip install -r requirements.txt
 uvicorn main:app --reload
 
 # Backend .NET
-cd src/Orchestrator
+cd NaluResumeAutomation/src/
 dotnet restore
 dotnet run
 ```
