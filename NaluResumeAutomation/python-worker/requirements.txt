@@ -4,4 +4,5 @@ python-multipart
 pymupdf
 langchain
 langchain-core
-langchain-community
+langchain-google-genai
+python-dotenv
