@@ -1,16 +1,26 @@
+using DotNetEnv;
 using NaluResumeAutomation.Application.Abstractions;
 using NaluResumeAutomation.Application.useCases;
 using NaluResumeAutomation.Infra.ExternalServices.APIs;
 using NaluResumeAutomation.Infra.ExternalServices.Telegram;
+using NaluResumeAutomation.Worker.BackgroundServices;
 using Telegram.Bot;
-using DotNetEnv;
 
 Env.Load();
 
 var builder = WebApplication.CreateBuilder(args);
 
 var botToken = builder.Configuration["Telegram:BotToken"];
-builder.Services.AddSingleton<ITelegramBotClient>(new TelegramBotClient(botToken!)); ;
+builder.Services.AddSingleton<ITelegramBotClient>(new TelegramBotClient(botToken!));
+builder.Services.AddHostedService<TelegramBotListener>();
+
+builder.Services.AddHttpClient<IPdfProcessor, PythonPdfProcessor>(client =>
+{
+    var pythonUrl = builder.Configuration["PythonWorker:BaseUrl"];
+    client.BaseAddress = new Uri(pythonUrl!);
+
+    client.Timeout = TimeSpan.FromMinutes(10);
+});
 
 builder.Services.AddHttpClient<IPdfProcessor, PythonPdfProcessor>(client =>
 {

@@ -28,6 +28,7 @@ namespace NaluResumeAutomation.Worker.BackgroundServices
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
+            _logger.LogInformation("🚀 Iniciando o robô do Telegram...");
             var receiverOptions = new ReceiverOptions
             {
                 AllowedUpdates = new[] { UpdateType.Message }

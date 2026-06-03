@@ -38,16 +38,47 @@ namespace NaluResumeAutomation.Application.useCases
 
                 document.CompleteProcessing(aiResult.SummaryText, aiResult.MindMapMarkdown);
 
-                var finalMessage = $"✅ *Resumo Prontinho!*\n\n{document.SummaryText}\n\n" +
-                               $"🗺️ *Mapa Mental (Markdown):*\n```mermaid\n{document.MindMapMarkdown}\n```";
+                var summaryMessage = $"✅ *Resumo Prontinho!*\n\n{document.SummaryText}";
+                await _telegramNotifier.SendMessageAsync(request.ChatId, summaryMessage, cancellationToken);
+                var mindMapMessage = $"✅ *Mapa Mental Prontinho!*\n\n{document.MindMapMarkdown}";
+                await _telegramNotifier.SendMessageAsync(request.ChatId, mindMapMessage, cancellationToken);
 
-                await _telegramNotifier.SendMessageAsync(request.ChatId, finalMessage, cancellationToken);
+                try
+                {
+                    var content = new StringContent(document.MindMapMarkdown, System.Text.Encoding.UTF8, "text/plain");
+
+                    using var httpClient = new HttpClient();
+                    var chartResponse = await httpClient.PostAsync("https://kroki.io/mermaid/png", content, cancellationToken);
+
+                    if (chartResponse.IsSuccessStatusCode)
+                    {
+                        await using var imageStream = await chartResponse.Content.ReadAsStreamAsync(cancellationToken);
+                        await _telegramNotifier.SendPhotoAsync(
+                            request.ChatId,
+                            imageStream,
+                            "🗺️ *Aqui está o seu Mapa Mental!*",
+                            cancellationToken);
+                    }
+                    else
+                    {
+                        var erroApi = await chartResponse.Content.ReadAsStringAsync();
+                        Console.WriteLine($"[ERRO KROKI]: {erroApi}");
+                        await _telegramNotifier.SendMessageAsync(request.ChatId, $"🗺️ *Mapa Mental (Texto):*\n\n{document.MindMapMarkdown}", cancellationToken);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[ERRO DE REDE - IMAGEM]: {ex.Message}");
+                    await _telegramNotifier.SendMessageAsync(request.ChatId, $"🗺️ *Mapa Mental (Texto):*\n\n{document.MindMapMarkdown}", cancellationToken);
+                }
 
                 return Result.Success();
             }
             catch (Exception ex)
             {
                 document.MarkAsFailed();
+
+                Console.WriteLine($"[ERRO CRÍTICO NO USE CASE]: {ex}");
 
                 await _telegramNotifier.SendMessageAsync(request.ChatId, "❌ Puxa, deu algum erro ao processar esse PDF. Pode tentar enviar de novo?", cancellationToken);
 

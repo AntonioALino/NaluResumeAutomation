@@ -2,7 +2,8 @@
 using NaluResumeAutomation.Infra.Common;
 using Telegram.Bot;
 using Telegram.Bot.Types.Enums;
-
+using Telegram.Bot.Exceptions;
+using Telegram.Bot.Types;
 namespace NaluResumeAutomation.Infra.ExternalServices.Telegram
 {
     public class TelegramNotifier : BaseTelegramClient, ITelegramNotifier
@@ -15,12 +16,23 @@ namespace NaluResumeAutomation.Infra.ExternalServices.Telegram
         {
             await ExecuteSafeAsync(async () =>
             {
-                await BotClient.SendMessage(
-                    chatId: chatId,
-                    text: message,
-                    parseMode: ParseMode.Markdown, 
-                    cancellationToken: cancellationToken
-                );
+                try
+                {
+                    await BotClient.SendMessage(
+                        chatId: chatId,
+                        text: message,
+                        parseMode: ParseMode.Markdown,
+                        cancellationToken: cancellationToken
+                    );
+                }
+                catch (ApiRequestException)
+                {
+                    await BotClient.SendMessage(
+                        chatId: chatId,
+                        text: message,
+                        cancellationToken: cancellationToken
+                    );
+                }
             });
         }
         public async Task<Stream> DownloadFileAsync(string fileId, CancellationToken cancellationToken)
@@ -36,5 +48,18 @@ namespace NaluResumeAutomation.Infra.ExternalServices.Telegram
             });
         }
 
+        public async Task SendPhotoAsync(long chatId, Stream photoStream, string caption, CancellationToken cancellationToken)
+        {
+            await ExecuteSafeAsync(async () =>
+            {
+                await BotClient.SendPhoto(
+                    chatId: chatId,
+                    photo: InputFile.FromStream(photoStream, "mapamental.png"),
+                    caption: caption,
+                    parseMode: ParseMode.Markdown,
+                    cancellationToken: cancellationToken
+                );
+            });
+        }
     }
 }
