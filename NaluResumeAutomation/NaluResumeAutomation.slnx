@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/NaluResumeAutomation.API/NaluResumeAutomation.API.csproj" />
+    <Project Path="src/NaluResumeAutomation.Application/NaluResumeAutomation.Application.csproj" />
+    <Project Path="src/NaluResumeAutomation.Domain/NaluResumeAutomation.Domain.csproj" />
+    <Project Path="src/NaluResumeAutomation.Infra/NaluResumeAutomation.Infra.csproj" />
+  </Folder>
+  <Folder Name="/tests/" />
+</Solution>
