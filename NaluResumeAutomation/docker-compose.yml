@@ -1,0 +1,22 @@
+services:
+  python-worker:
+    build:
+      context: ./python-worker
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./python-worker/.env
+    restart: unless-stopped
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - python-worker
+    environment:
+      - PythonWorker__BaseUrl=http://python-worker:8000
+    env_file:
+      - ./src/NaluResumeAutomation.API/.env
+    restart: unless-stopped
